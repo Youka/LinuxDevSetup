@@ -1,0 +1,6 @@
+# Intermediate directories
+/test/
+/tmp/
+
+# IDE settings
+.vscode
