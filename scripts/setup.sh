@@ -83,10 +83,15 @@ if ! ls /opt/apache-tomcat 2>/dev/null 1>&2; then
 fi
 
 # Configure git
-if ! git config --global user.email 1>/dev/null; then
+if ! sudo -u $SUDO_USER git config --global user.email 1>/dev/null; then
+	# Request input
 	read -e -p "Enter git user (global): " -i "$SUDO_USER" git_user
-	git config --global user.name "$git_user"
 	read -e -p "Enter git email (global): " -i "$SUDO_USER@foobar.com" git_email
+	# Configure for user
+	sudo -u $SUDO_USER git config --global user.name "$git_user"
+	sudo -u $SUDO_USER git config --global user.email "$git_email"
+	# Configure for root
+	git config --global user.name "$git_user"
 	git config --global user.email "$git_email"
 fi
 # Configure java
