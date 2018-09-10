@@ -14,11 +14,15 @@ fi
 # Create project
 read -p "Enter project name (or leave empty): " project_name
 if [ $project_name ]; then
-	# Initialize frontend project
+	# Subproject names
+	frontend_project_name=$project_name"-app"
+	backend_project_name=$project_name"-service"
+	# Project location on desktop
 	cd $HOME/Desktop
-	ng new $project_name --routing --style=scss --skip-tests # With routing module, sass as styling language and no tests overflow
-	sed -i 's/<base href="\/">/<base href=".">/g' $project_name/src/index.html  # Fix resources loading path from root to local
-	sed -i "s/\"outputPath\": \"dist/\"outputPath\": \"\/opt\/apache-tomcat\/webapps/g" $project_name/angular.json   # Set deploy directory to tomcat server
+	# Initialize frontend project
+	ng new $frontend_project_name --routing --style=scss --skip-tests # With routing module, sass as styling language and no tests overflow
+	sed -i 's/<base href="\/">/<base href=".">/g' $frontend_project_name/src/index.html  # Fix resources loading path from root to local
+	sed -i "s/\"outputPath\": \"dist/\"outputPath\": \"\/opt\/apache-tomcat\/webapps/g" $frontend_project_name/angular.json   # Set deploy directory to tomcat server
 	# Initialize backend project
 	# TODO: generate restfull webservice maven project by custom archetype (connect to tomcat & postgresql jndi)
 fi
