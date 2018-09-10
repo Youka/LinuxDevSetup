@@ -8,6 +8,7 @@ fi
 # Macros
 apt_install="apt-get install -y"
 apt_update="apt-get update"
+psql="sudo -u postgres psql"
 info_message () {
 	echo
 	echo -e "\033[0;36m $1 \033[0m"
@@ -100,15 +101,15 @@ if [ ! $JAVA_HOME ]; then
 fi
 # Configure postgresql
 service postgresql start
-if sudo -u postgres psql -c "select 1 from pg_roles where rolname='test'" | grep "0 rows" 1>/dev/null; then
+if $psql -c "select 1 from pg_roles where rolname='test'" | grep "0 rows" 1>/dev/null; then
 	# See <https://www.postgresql.org/docs/9.1/static/sql-revoke.html> <https://www.postgresql.org/docs/9.2/static/sql-createuser.html> <https://www.postgresql.org/docs/9.2/static/sql-createdatabase.html>
-	sudo -u postgres psql -c "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
-	sudo -u postgres psql -c "REVOKE CONNECT ON DATABASE template1 FROM PUBLIC;"
-	sudo -u postgres psql -c "CREATE USER test WITH PASSWORD 'test';"
-	sudo -u postgres psql -c "CREATE DATABASE test WITH OWNER test CONNECTION LIMIT 200;"
-	sudo -u postgres psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
-	sudo -u postgres psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01');"
-	sudo -u postgres psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Julia', '2000-12-24');"
+	$psql -c "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
+	$psql -c "REVOKE CONNECT ON DATABASE template1 FROM PUBLIC;"
+	$psql -c "CREATE USER test WITH PASSWORD 'test';"
+	$psql -c "CREATE DATABASE test WITH OWNER test CONNECTION LIMIT 200;"
+	$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
+	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01');"
+	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Julia', '2000-12-24');"
 	info_message "You can register a database connection in 'pgadmin3' with (host=localhost, port=5432, dbname=test, user=test, password=test) now!"
 fi
 # Configure Tomcat
@@ -121,13 +122,13 @@ if [ ! $CATALINA_HOME ]; then
 	sed -i 's/<\/Context>/    <ResourceLink name="jdbc\/test" global="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" \/>\n<\/Context>/g' /opt/apache-tomcat/conf/context.xml
 	sed -i 's/  <\/GlobalNamingResources>/    <Resource name="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" driverClassName="org.postgresql.Driver" url="jdbc:postgresql:\/\/127.0.0.1:5432\/test" username="test" password="test" maxTotal="20" maxIdle="10" maxWaitMillis="-1" \/>\n  <\/GlobalNamingResources>/g' /opt/apache-tomcat/conf/server.xml
 	info_message "Added tomcat 'jdbc/test' jndi resource!"
-	# Add tomcat admin user
+	# Add tomcat server users
 	sed -i 's/<\/tomcat-users>/  <role rolename="administrator"\/>\n  <role rolename="user"\/>\n  <user username="admin" password="admin" roles="administrator,manager-gui,manager-script"\/>\n  <user username="user" password="user" roles="user"\/>\n<\/tomcat-users>/g' /opt/apache-tomcat/conf/tomcat-users.xml
 	info_message "Added tomcat 'admin' & 'user' user!"
 	# Add tomcat system user & assign to tomcat folder
 	groupadd tomcat
 	useradd -s /sbin/nologin -g tomcat -d /opt/apache-tomcat tomcat
-	# Set permissions (owner cannot be set over link, so detect original)
+	# Set permissions (owner cannot be set over symbolic link, so detect original)
 	for tomcat in /opt/apache-tomcat-*; do
 		chown -R tomcat:tomcat $tomcat
 		chmod -R a+rwx $tomcat
