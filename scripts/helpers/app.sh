@@ -6,5 +6,5 @@ psql="sudo -u postgres psql"
 
 # Convenient functions
 targz_download () {
-	curl $1 | tar -xzf - -C $2
+	curl "$1" | tar -xzf - -C "$2"
 }

@@ -13,3 +13,6 @@ To run bash scripts:
 * enter project name
 * wait...
 * PROFIT
+
+# TODO
+* Fix: Tomcat download path changes with new version

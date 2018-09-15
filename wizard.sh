@@ -16,6 +16,6 @@ echo_info "########## SELECT SCRIPT TO EXECUTE ##########"
 select opt in "${options[@]}"; do
 	if [ -n "$opt" ]; then
 		# Execute script by selected option
-		. ./$opt.sh
+		. "./$opt.sh"
 	fi
 done

@@ -4,7 +4,6 @@
 . ./helpers/app.sh
 . ./helpers/env.sh
 . ./helpers/io.sh
-. ./helpers/util.sh
 
 
 # Check for root privilege (needed by following operations)
@@ -64,17 +63,19 @@ fi
 # Install Tomcat (HTTP server with servlet support)
 if [ ! -L /opt/apache-tomcat ]; then
 	# Load tomcat
-	targz_download http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.33/bin/apache-tomcat-8.5.33.tar.gz /opt
+	targz_download http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.34/bin/apache-tomcat-8.5.34.tar.gz /opt
 	# Create shortcut (to used version)
-	find_first /opt/apache-tomcat-* tomcat
-	ln -s $tomcat /opt/apache-tomcat
+	for tomcat in /opt/apache-tomcat-*; do
+		ln -s $tomcat /opt/apache-tomcat
+		break
+	done
 fi
 
 # Configure git
 if ! sudo -u $SUDO_USER git config --global user.email 1>/dev/null; then
 	# Request input
 	read_string_with_default "Enter git user (global): " "$SUDO_USER" git_user
-	read_string_with_default "Enter git email (global): " $SUDO_USER@foobar.com" git_email
+	read_string_with_default "Enter git email (global): " "$SUDO_USER@foobar.com" git_email
 	# Configure for user
 	sudo -u $SUDO_USER git config --global user.name "$git_user"
 	sudo -u $SUDO_USER git config --global user.email "$git_email"
@@ -94,9 +95,9 @@ if $psql -c "select 1 from pg_roles where rolname='test'" | grep "0 rows" 1>/dev
 	$psql -c "REVOKE CONNECT ON DATABASE template1 FROM PUBLIC;"
 	$psql -c "CREATE USER test WITH PASSWORD 'test';"
 	$psql -c "CREATE DATABASE test WITH OWNER test CONNECTION LIMIT 200;"
-	$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
-	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01');"
-	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Julia', '2000-12-24');"
+	#$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
+	#$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01');"
+	#$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Julia', '2000-12-24');"
 	echo_note "You can register a database connection in 'pgadmin3' with (host=localhost, port=5432, dbname=test, user=test, password=test) now!"
 fi
 # Configure Tomcat
@@ -116,10 +117,12 @@ if [ ! $CATALINA_HOME ]; then
 	groupadd tomcat
 	useradd -s /sbin/nologin -g tomcat -d /opt/apache-tomcat tomcat
 	# Set permissions (owner cannot be set over symbolic link, so detect original)
-	find_first /opt/apache-tomcat-* tomcat
-	chown -R tomcat:tomcat $tomcat
-	chmod -R a+rwx $tomcat
-	chmod -R a-w,g+w $tomcat/bin $tomcat/lib
+	for tomcat in /opt/apache-tomcat-*; do
+		chown -R tomcat:tomcat $tomcat
+		chmod -R a+rwx $tomcat
+		chmod -R a-w,g+w $tomcat/bin $tomcat/lib
+		break
+	done
 	# Add system service for tomcat
 	echo "[Unit]
 Description=Apache Tomcat Web Application Container

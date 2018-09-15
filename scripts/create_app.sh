@@ -18,8 +18,8 @@ fi
 read_string "Enter project name (or leave empty): " project_name
 if [ -n "$project_name" ]; then
 	# Subproject names
-	frontend_project_name=$project_name"-app"
-	backend_project_name=$project_name"-service"
+	frontend_project_name="$project_name-app"
+	backend_project_name="$project_name-service"
 	# Project location on desktop
 	cd $HOME/Desktop
 	# Initialize frontend project

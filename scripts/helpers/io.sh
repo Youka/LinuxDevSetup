@@ -32,8 +32,8 @@ read_char () {
 	read -e -p "$1" -n 1 $2
 }
 read_string () {
-	read -p $1 $2
+	read -p "$1" $2
 }
 read_string_with_default () {
-	read -e -p $1 -i $2 $3
+	read -e -p "$1" -i "$2" $3
 }
