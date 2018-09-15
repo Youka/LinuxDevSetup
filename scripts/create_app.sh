@@ -1,9 +1,9 @@
 #! /bin/bash
 
 # Extensions
-. ./helpers/app
-. ./helpers/env
-. ./helpers/io
+. ./helpers/app.sh
+. ./helpers/env.sh
+. ./helpers/io.sh
 
 
 # Check for user privilege (root not recommend by following operations)

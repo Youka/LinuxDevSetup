@@ -1,10 +1,10 @@
 #! /bin/bash
 
 # Extensions
-. ./helpers/app
-. ./helpers/env
-. ./helpers/io
-. ./helpers/util
+. ./helpers/app.sh
+. ./helpers/env.sh
+. ./helpers/io.sh
+. ./helpers/util.sh
 
 
 # Check for root privilege (needed by following operations)

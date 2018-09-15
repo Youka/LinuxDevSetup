@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Extensions
-. ./scripts/helpers/io
+. ./scripts/helpers/io.sh
 
 
 # Move into scripts folder
