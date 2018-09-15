@@ -17,5 +17,6 @@ select opt in "${options[@]}"; do
 	if [ -n "$opt" ]; then
 		# Execute script by selected option
 		. "./$opt.sh"
+		break
 	fi
 done
