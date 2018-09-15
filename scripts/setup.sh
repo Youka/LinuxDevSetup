@@ -90,14 +90,17 @@ fi
 # Configure postgresql
 service postgresql start
 if $psql -c "select 1 from pg_roles where rolname='test'" | grep "0 rows" 1>/dev/null; then
-	# See <https://www.postgresql.org/docs/9.1/static/sql-revoke.html> <https://www.postgresql.org/docs/9.2/static/sql-createuser.html> <https://www.postgresql.org/docs/9.2/static/sql-createdatabase.html>
+	# See <https://www.postgresql.org/docs/9.1/static/sql-revoke.html>
 	$psql -c "REVOKE CONNECT ON DATABASE postgres FROM PUBLIC;"
 	$psql -c "REVOKE CONNECT ON DATABASE template1 FROM PUBLIC;"
+	# See <https://www.postgresql.org/docs/9.2/static/sql-createuser.html>
 	$psql -c "CREATE USER test WITH PASSWORD 'test';"
+	# See <https://www.postgresql.org/docs/9.2/static/sql-createdatabase.html>
 	$psql -c "CREATE DATABASE test WITH OWNER test CONNECTION LIMIT 200;"
-	#$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
-	#$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01');"
-	#$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Julia', '2000-12-24');"
+	# Insert test data
+	$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
+	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01');"
+	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Julia', '2000-12-24');"
 	echo_note "You can register a database connection in 'pgadmin3' with (host=localhost, port=5432, dbname=test, user=test, password=test) now!"
 fi
 # Configure Tomcat
