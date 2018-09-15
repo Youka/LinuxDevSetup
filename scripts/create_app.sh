@@ -1,19 +1,22 @@
 #! /bin/bash
 
+# Extensions
+. ./helpers/app
+. ./helpers/env
+. ./helpers/io
+
+
 # Check for user privilege (root not recommend by following operations)
-if [ $USER == 'root' ]; then
-	echo "You should run this script with user privilege."
-	exit
-fi
+with_user
 # Check correct environment
-if ! hash ng 2>/dev/null; then
+if ! $app_exist ng 2>/dev/null; then
 	echo "Missing setup? Tools for projects not installed!"
 	exit
 fi
 
 # Create project
-read -p "Enter project name (or leave empty): " project_name
-if [ $project_name ]; then
+read_string "Enter project name (or leave empty): " project_name
+if [ -n "$project_name" ]; then
 	# Subproject names
 	frontend_project_name=$project_name"-app"
 	backend_project_name=$project_name"-service"

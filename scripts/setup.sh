@@ -1,57 +1,46 @@
 #! /bin/bash
 
+# Extensions
+. ./helpers/app
+. ./helpers/env
+. ./helpers/io
+. ./helpers/util
+
+
 # Check for root privilege (needed by following operations)
-if [ $USER != 'root' ]; then
-	echo "You must run this script with root privilege."
-	exit
-fi
-# Macros
-apt_install="apt-get install -y"
-apt_update="apt-get update"
-psql="sudo -u postgres psql"
-info_message () {
-	echo
-	echo -e "\033[0;36m $1 \033[0m"
-	echo
-}
-SUDO_HOME=$(eval echo ~${SUDO_USER})
-add_env_var () {
-	echo "$1=$2" >> /etc/environment
-	echo "export $1=$2" >> $SUDO_HOME/.bashrc
-	source $SUDO_HOME/.bashrc
-}
+with_root
 # Load environment from OS configuration instead of relying on parent shell
-source $SUDO_HOME/.bashrc
+load_env_user
 
 # Install build-essential (most basic build tools for linux software)
-$apt_install build-essential
+$app_install build-essential
 # Install curl (downloader for web contents)
-$apt_install curl
+$app_install curl
 # Install git (source code manager)
-$apt_install git
+$app_install git
 # Install java (development kit & runtime)
-$apt_install default-jdk
+$app_install default-jdk
 # Install maven (popular java dependency manager & build system)
-$apt_install maven
+$app_install maven
 # Install postgresql (free database server competitive with best commercial ones)
-$apt_install postgresql pgadmin3
+$app_install postgresql pgadmin3
 
 # Install MS Visual Code (most powerful coding editor)
-if ! hash code 2>/dev/null; then
+if ! $app_exist code 2>/dev/null; then
 	# See <https://code.visualstudio.com/docs/setup/linux>
 	curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
 	install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
 	rm microsoft.gpg
 	echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
-	$apt_install apt-transport-https
-	$apt_update
-	$apt_install code
+	$app_install apt-transport-https
+	$app_update
+	$app_install code
 fi
 # Install NodeJS/npm (javascript runtime environment + dependency manager)
-if ! hash nodejs 2>/dev/null; then
+if ! $app_exist nodejs 2>/dev/null; then
 	# See <https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions>
 	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-	$apt_install nodejs
+	$app_install nodejs
 fi
 # Install Angular CLI (JS framework for SPAs)
 if ! npm list -g @angular/cli 2>/dev/null; then
@@ -60,7 +49,7 @@ fi
 # Install Eclipse for Java EE (most advanced java IDE)
 if [ ! -d /opt/eclipse ]; then
 	# Load eclipse
-	curl http://ftp.fau.de/eclipse/technology/epp/downloads/release/photon/R/eclipse-jee-photon-R-linux-gtk-x86_64.tar.gz | tar -xzf - -C /opt
+	targz_download http://ftp.fau.de/eclipse/technology/epp/downloads/release/photon/R/eclipse-jee-photon-R-linux-gtk-x86_64.tar.gz /opt
 	# Create desktop file
 	echo "[Desktop Entry]
 Name=Eclipse
@@ -73,21 +62,19 @@ Categories=Development;Application" > /usr/share/applications/eclipse.desktop
 	chmod a+x /usr/share/applications/eclipse.desktop
 fi
 # Install Tomcat (HTTP server with servlet support)
-if ! ls /opt/apache-tomcat 2>/dev/null 1>&2; then
+if [ ! -L /opt/apache-tomcat ]; then
 	# Load tomcat
-	curl http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.33/bin/apache-tomcat-8.5.33.tar.gz | tar -xzf - -C /opt
+	targz_download http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.33/bin/apache-tomcat-8.5.33.tar.gz /opt
 	# Create shortcut (to used version)
-	for tomcat in /opt/apache-tomcat-*; do
-		ln -s $tomcat /opt/apache-tomcat
-		break
-	done
+	find_first /opt/apache-tomcat-* tomcat
+	ln -s $tomcat /opt/apache-tomcat
 fi
 
 # Configure git
 if ! sudo -u $SUDO_USER git config --global user.email 1>/dev/null; then
 	# Request input
-	read -e -p "Enter git user (global): " -i "$SUDO_USER" git_user
-	read -e -p "Enter git email (global): " -i "$SUDO_USER@foobar.com" git_email
+	read_string_with_default "Enter git user (global): " "$SUDO_USER" git_user
+	read_string_with_default "Enter git email (global): " $SUDO_USER@foobar.com" git_email
 	# Configure for user
 	sudo -u $SUDO_USER git config --global user.name "$git_user"
 	sudo -u $SUDO_USER git config --global user.email "$git_email"
@@ -110,7 +97,7 @@ if $psql -c "select 1 from pg_roles where rolname='test'" | grep "0 rows" 1>/dev
 	$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
 	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01');"
 	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Julia', '2000-12-24');"
-	info_message "You can register a database connection in 'pgadmin3' with (host=localhost, port=5432, dbname=test, user=test, password=test) now!"
+	echo_note "You can register a database connection in 'pgadmin3' with (host=localhost, port=5432, dbname=test, user=test, password=test) now!"
 fi
 # Configure Tomcat
 if [ ! $CATALINA_HOME ]; then
@@ -121,20 +108,18 @@ if [ ! $CATALINA_HOME ]; then
 	# Add tomcat jndi resource for postgresql ('test' database)
 	sed -i 's/<\/Context>/    <ResourceLink name="jdbc\/test" global="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" \/>\n<\/Context>/g' /opt/apache-tomcat/conf/context.xml
 	sed -i 's/  <\/GlobalNamingResources>/    <Resource name="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" driverClassName="org.postgresql.Driver" url="jdbc:postgresql:\/\/127.0.0.1:5432\/test" username="test" password="test" maxTotal="20" maxIdle="10" maxWaitMillis="-1" \/>\n  <\/GlobalNamingResources>/g' /opt/apache-tomcat/conf/server.xml
-	info_message "Added tomcat 'jdbc/test' jndi resource!"
+	echo_note "Added tomcat 'jdbc/test' jndi resource!"
 	# Add tomcat server users
 	sed -i 's/<\/tomcat-users>/  <role rolename="administrator"\/>\n  <role rolename="user"\/>\n  <user username="admin" password="admin" roles="administrator,manager-gui,manager-script"\/>\n  <user username="user" password="user" roles="user"\/>\n<\/tomcat-users>/g' /opt/apache-tomcat/conf/tomcat-users.xml
-	info_message "Added tomcat 'admin' & 'user' user!"
+	echo_note "Added tomcat 'admin' & 'user' user!"
 	# Add tomcat system user & assign to tomcat folder
 	groupadd tomcat
 	useradd -s /sbin/nologin -g tomcat -d /opt/apache-tomcat tomcat
 	# Set permissions (owner cannot be set over symbolic link, so detect original)
-	for tomcat in /opt/apache-tomcat-*; do
-		chown -R tomcat:tomcat $tomcat
-		chmod -R a+rwx $tomcat
-		chmod -R a-w,g+w $tomcat/bin $tomcat/lib
-		break
-	done
+	find_first /opt/apache-tomcat-* tomcat
+	chown -R tomcat:tomcat $tomcat
+	chmod -R a+rwx $tomcat
+	chmod -R a-w,g+w $tomcat/bin $tomcat/lib
 	# Add system service for tomcat
 	echo "[Unit]
 Description=Apache Tomcat Web Application Container
