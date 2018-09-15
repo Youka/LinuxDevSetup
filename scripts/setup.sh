@@ -126,7 +126,7 @@ if [ ! $CATALINA_HOME ]; then
 		chmod -R a-w,g+w $tomcat/bin $tomcat/lib
 		break
 	done
-	# Add system service for tomcat
+	# Add system service for tomcat (and start)
 	echo "[Unit]
 Description=Apache Tomcat Web Application Container
 After=syslog.target network.target
@@ -140,4 +140,5 @@ ExecStart=/opt/apache-tomcat/bin/startup.sh
 ExecStop=/opt/apache-tomcat/bin/shutdown.sh
 User=tomcat
 Group=tomcat" > /etc/systemd/system/tomcat.service
+	service tomcat start
 fi
