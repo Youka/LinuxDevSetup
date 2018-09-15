@@ -63,7 +63,7 @@ fi
 # Install Tomcat (HTTP server with servlet support)
 if [ ! -L /opt/apache-tomcat ]; then
 	# Load tomcat
-	targz_download http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.34/bin/apache-tomcat-8.5.34.tar.gz /opt
+	targz_download http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.34/bin/apache-tomcat-8.5.34.tar.gz /opt
 	# Create shortcut (to used version)
 	for tomcat in /opt/apache-tomcat-*; do
 		ln -s $tomcat /opt/apache-tomcat
