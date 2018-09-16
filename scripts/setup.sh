@@ -100,32 +100,17 @@ if $psql -c "select 1 from pg_roles where rolname='test'" | grep "0 rows" 1>/dev
 	# Insert test data
 	$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
 	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01'),('Julia', '2000-12-24');"
+	# Give usage hint
 	echo_note "You can register a database connection in 'pgadmin3' with (host=localhost, port=5432, dbname=test, user=test, password=test) now!"
 fi
-# Configure Tomcat
+# Configure Tomcat (outside)
 if [ ! $CATALINA_HOME ]; then
 	# Add environment variable
 	add_env_var "CATALINA_HOME" /opt/apache-tomcat
-	# Add postgresql jdbc driver
-	curl https://jdbc.postgresql.org/download/postgresql-42.2.5.jar > /opt/apache-tomcat/lib/postgresql-42.2.5.jar
-	# Add tomcat jndi resource for postgresql ('test' database)
-	sed -i 's/<\/Context>/    <ResourceLink name="jdbc\/test" global="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" \/>\n<\/Context>/g' /opt/apache-tomcat/conf/context.xml
-	sed -i 's/  <\/GlobalNamingResources>/    <Resource name="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" driverClassName="org.postgresql.Driver" url="jdbc:postgresql:\/\/127.0.0.1:5432\/test" username="test" password="test" maxTotal="20" maxIdle="10" maxWaitMillis="-1" \/>\n  <\/GlobalNamingResources>/g' /opt/apache-tomcat/conf/server.xml
-	echo_note "Added tomcat 'jdbc/test' jndi resource!"
-	# Add tomcat server users
-	sed -i 's/<\/tomcat-users>/  <role rolename="administrator"\/>\n  <role rolename="user"\/>\n  <user username="admin" password="admin" roles="administrator,manager-gui,manager-script"\/>\n  <user username="user" password="user" roles="user"\/>\n<\/tomcat-users>/g' /opt/apache-tomcat/conf/tomcat-users.xml
-	echo_note "Added tomcat 'admin' & 'user' user!"
 	# Add tomcat system user & assign to tomcat folder
 	groupadd tomcat
 	useradd -s /sbin/nologin -g tomcat -d /opt/apache-tomcat tomcat
-	# Set permissions (owner cannot be set over symbolic link, so detect original)
-	for tomcat in /opt/apache-tomcat-*; do
-		chown -R tomcat:tomcat $tomcat
-		chmod -R a+rwx $tomcat
-		chmod -R a-w,g+w $tomcat/bin $tomcat/lib
-		break
-	done
-	# Add system service for tomcat (and start)
+	# Add system service for tomcat
 	echo "[Unit]
 Description=Apache Tomcat Web Application Container
 After=syslog.target network.target
@@ -139,5 +124,25 @@ ExecStart=/opt/apache-tomcat/bin/startup.sh
 ExecStop=/opt/apache-tomcat/bin/shutdown.sh
 User=tomcat
 Group=tomcat" > /etc/systemd/system/tomcat.service
+fi
+# Configure Tomcat (inside)
+if [ ! -f /opt/apache-tomcat/lib/postgresql.jar ]; then
+	# Add postgresql jdbc driver
+	curl https://jdbc.postgresql.org/download/postgresql-42.2.5.jar > /opt/apache-tomcat/lib/postgresql.jar
+	# Add tomcat jndi resource for postgresql ('test' database)
+	sed -i 's/<\/Context>/    <ResourceLink name="jdbc\/test" global="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" \/>\n<\/Context>/g' /opt/apache-tomcat/conf/context.xml
+	sed -i 's/  <\/GlobalNamingResources>/    <Resource name="jdbc\/testGlobal" auth="Container" type="javax.sql.DataSource" driverClassName="org.postgresql.Driver" url="jdbc:postgresql:\/\/127.0.0.1:5432\/test" username="test" password="test" maxTotal="20" maxIdle="10" maxWaitMillis="-1" \/>\n  <\/GlobalNamingResources>/g' /opt/apache-tomcat/conf/server.xml
+	echo_note "Added tomcat 'jdbc/test' jndi resource!"
+	# Add tomcat server users
+	sed -i 's/<\/tomcat-users>/  <role rolename="administrator"\/>\n  <role rolename="user"\/>\n  <user username="admin" password="admin" roles="administrator,manager-gui,manager-script"\/>\n  <user username="user" password="user" roles="user"\/>\n<\/tomcat-users>/g' /opt/apache-tomcat/conf/tomcat-users.xml
+	echo_note "Added tomcat 'admin' & 'user' user!"
+	# Set permissions (owner cannot be set over symbolic link, so detect original)
+	for tomcat in /opt/apache-tomcat-*; do
+		chown -R tomcat:tomcat $tomcat
+		chmod -R a+rwx $tomcat
+		chmod -R a-w,g+w $tomcat/bin $tomcat/lib
+		break
+	done
+	# Start tomcat service
 	service tomcat start
 fi
