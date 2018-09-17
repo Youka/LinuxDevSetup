@@ -13,3 +13,9 @@ To run bash scripts:
 * enter project name
 * wait...
 * PROFIT
+
+# TODO
+* Add minimal RESTful service with DB output
+* Pack service into maven archetype
+* Install keycloak
+* Setup security
