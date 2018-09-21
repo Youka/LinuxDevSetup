@@ -1,5 +1,5 @@
 # Set home to sudo user
-if [ $USER == "root" ] && [ -n "$SUDO_USER" ]; then
+if [ "$USER" == "root" ] && [ -n "$SUDO_USER" ]; then
 	SUDO_HOME=$(eval echo ~${SUDO_USER})
 fi
 
@@ -30,13 +30,13 @@ load_env_user () {
 
 # Request privileges
 with_root () {
-	if [ $USER != "root" ]; then
+	if [ "$USER" != "root" ]; then
 		echo_error "Root user required!"
 		exit
 	fi
 }
 with_user () {
-	if [ $USER == "root" ]; then
+	if [ "$USER" == "root" ]; then
 		echo_error "Non-root user required!"
 		exit
 	fi
