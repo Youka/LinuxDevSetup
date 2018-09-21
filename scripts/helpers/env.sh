@@ -9,9 +9,9 @@ add_env_var_global () {
 }
 add_env_var_user () {
 	if [ -n "$SUDO_HOME" ]; then
-		echo "$1=$2" >> $SUDO_HOME/.bashrc
+		echo "export $1=$2" >> $SUDO_HOME/.bashrc
 	else
-		echo "$1=$2" >> ~/.bashrc
+		echo "export $1=$2" >> ~/.bashrc
 	fi
 }
 load_env_global () {
