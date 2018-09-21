@@ -17,7 +17,7 @@ select opt in "${options[@]}"; do
 	if [ -n "$opt" ]; then
 		# Execute script by selected option
 		if [ "${opt:0:3}" == "su_" ]; then
-			sudo bash "./$opt.sh"
+			sudo -E bash "./$opt.sh"
 		else
 			bash "./$opt.sh"
 		fi
