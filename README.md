@@ -1,20 +1,17 @@
+# Usage
+To run bash scripts:
+* open **terminal** in project directory
+* run `chmod u+x ./wizard.sh` to make wizard executable
+* run `./wizard.sh` and choose your script to execute
+
 # What these scripts do?
-*scripts/setup.sh* installs & configures developer software for a debian-based operating system.
+*scripts/su_setup.sh* installs & configures developer software for a debian-based operating system.
 
 *scripts/create_app.sh* builds & configures new projects for a web application.
 
-# Usage
-To run bash scripts:
-* open **terminal** in scripts directory
-* run `chmod u+x ./setup.sh && sudo ./setup.sh`
-* enter root password
-* wait... (pay attention to prompts with default values near the end)
-* run `chmod u+x ./create_app.sh && ./create_app.sh`
-* enter project name
-* wait...
-* PROFIT
 
 # TODO
+* Load latest versions on setup
 * Add minimal RESTful service with DB output
 * Pack service into maven archetype
 * Install keycloak

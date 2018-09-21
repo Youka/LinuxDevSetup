@@ -16,7 +16,7 @@ $app_install build-essential
 # Install curl (downloader for web contents)
 $app_install curl
 # Install git (source code manager)
-$app_install git
+$app_install git git-gui
 # Install java (development kit & runtime)
 $app_install default-jdk
 # Install maven (popular java dependency manager & build system)
