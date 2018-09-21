@@ -9,7 +9,7 @@
 # Check for root privilege (needed by following operations)
 with_root
 # Load environment from OS configuration instead of relying on parent shell
-load_env_user
+load_env_global
 
 # Install build-essential (most basic build tools for linux software)
 $app_install build-essential
