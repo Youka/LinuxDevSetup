@@ -48,7 +48,9 @@ fi
 # Install Eclipse for Java EE (most advanced java IDE)
 if [ ! -d /opt/eclipse ]; then
 	# Load eclipse
-	targz_download http://ftp.fau.de/eclipse/technology/epp/downloads/release/photon/R/eclipse-jee-photon-R-linux-gtk-x86_64.tar.gz /opt
+	eclipse_server=http://ftp.fau.de/eclipse/technology/epp/downloads/release
+	eclipse_version=$(curl $eclipse_server/release.xml | grep -Pom1 "(?<=<present>)[^<]+")
+	targz_download $eclipse_server/$eclipse_version/$(curl $eclipse_server/$eclipse_version/jee.xml | grep -Pom1 "(?<=<product name=\")[^\"]+")-linux-gtk-x86_64.tar.gz /opt
 	# Create desktop file
 	echo "[Desktop Entry]
 Name=Eclipse
