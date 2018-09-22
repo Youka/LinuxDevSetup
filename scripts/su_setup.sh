@@ -145,6 +145,6 @@ if [ -L /opt/apache-tomcat ] && [ ! -f /opt/apache-tomcat/lib/postgresql.jar ]; 
 		chmod -R a-w,g+w $tomcat/bin $tomcat/lib
 		break
 	done
-	# Start tomcat service
-	service tomcat start
+	# Give usage hint
+	echo_note "Tomcat service installed!"
 fi
