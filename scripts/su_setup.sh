@@ -85,7 +85,7 @@ if ! sudo -u $SUDO_USER git config --global user.email 1>/dev/null; then
 fi
 # Configure java
 if [ ! $JAVA_HOME ]; then
-	add_env_var "JAVA_HOME" $(readlink -ze /usr/bin/javac | xargs -0 dirname | xargs -0 dirname)
+	add_env_var JAVA_HOME $(readlink -ze /usr/bin/javac | xargs -0 dirname | xargs -0 dirname)
 fi
 # Configure postgresql
 service postgresql start
@@ -99,14 +99,14 @@ if $psql -c "select 1 from pg_roles where rolname='test'" | grep "0 rows" 1>/dev
 	$psql -c "CREATE DATABASE test WITH OWNER test CONNECTION LIMIT 200;"
 	# Insert test data
 	$psql -d test -c "CREATE TABLE persons(id serial primary key, name varchar(64) not null, birth_date date not null); ALTER TABLE persons OWNER TO test;"
-	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01'),('Julia', '2000-12-24');"
+	$psql -d test -c "INSERT INTO persons(name, birth_date) VALUES('Max', '1970-01-01'),('Julia', '2000-12-24'),('Lisa', '2018-09-21');"
 	# Give usage hint
 	echo_note "You can register a database connection in 'pgadmin3' with (host=localhost, port=5432, dbname=test, user=test, password=test) now!"
 fi
 # Configure Tomcat (outside)
 if [ ! $CATALINA_HOME ]; then
 	# Add environment variable
-	add_env_var "CATALINA_HOME" /opt/apache-tomcat
+	add_env_var CATALINA_HOME /opt/apache-tomcat
 	# Add tomcat system user & assign to tomcat folder
 	groupadd tomcat
 	useradd -s /sbin/nologin -g tomcat -d /opt/apache-tomcat tomcat
@@ -126,7 +126,7 @@ User=tomcat
 Group=tomcat" > /etc/systemd/system/tomcat.service
 fi
 # Configure Tomcat (inside)
-if [ ! -f /opt/apache-tomcat/lib/postgresql.jar ]; then
+if [ -L /opt/apache-tomcat ] && [ ! -f /opt/apache-tomcat/lib/postgresql.jar ]; then
 	# Add postgresql jdbc driver
 	curl https://jdbc.postgresql.org/download/postgresql-42.2.5.jar > /opt/apache-tomcat/lib/postgresql.jar
 	# Add tomcat jndi resource for postgresql ('test' database)
